@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start - Metadata Fixer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .device-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .device-info strong {
+            color: #2563eb;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        .device-type {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #1f2937;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+        .features {
+            text-align: left;
+            margin: 20px 0;
+        }
+        .features li {
+            padding: 8px 0;
+            color: #4b5563;
+        }
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        .status.mobile {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status.desktop {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Metadata Fixer</h1>
+        <p class="subtitle">Google Photos Takeout Tool</p>
+
+        <div class="device-type" id="deviceIcon">💻</div>
+        <div class="status" id="deviceStatus">Desktop</div>
+
+        <div class="device-info">
+            <strong>Device Information</strong>
+            <div id="deviceInfo">Loading...</div>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <a href="index.html" class="btn btn-primary">🚀 Launch App</a>
+            <a href="test.html" class="btn btn-secondary">🧪 Run Tests</a>
+        </div>
+
+        <div class="features">
+            <strong>What you can do:</strong>
+            <ul>
+                <li>✅ Restore photo timestamps</li>
+                <li>✅ Recover GPS coordinates</li>
+                <li>✅ Process Google Takeout ZIPs</li>
+                <li>✅ 100% private (client-side only)</li>
+                <li>✅ No installation required</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #64748b; font-size: 0.9em;">
+                <strong>Mobile Testing:</strong><br>
+                Access from your mobile device at:<br>
+                <code id="mobileUrl" style="background: #f3f4f6; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 5px;">
+                    http://<span id="ipAddress">your-ip</span>:8000/quick-start.html
+                </code>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Detect device type
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isTablet = /iPad|Android/i.test(navigator.userAgent) && window.innerWidth >= 768;
+
+        const deviceIcon = document.getElementById('deviceIcon');
+        const deviceStatus = document.getElementById('deviceStatus');
+        const deviceInfo = document.getElementById('deviceInfo');
+
+        if (isMobile && !isTablet) {
+            deviceIcon.textContent = '📱';
+            deviceStatus.textContent = 'Mobile Device';
+            deviceStatus.className = 'status mobile';
+        } else if (isTablet) {
+            deviceIcon.textContent = '📱';
+            deviceStatus.textContent = 'Tablet';
+            deviceStatus.className = 'status mobile';
+        } else {
+            deviceIcon.textContent = '💻';
+            deviceStatus.textContent = 'Desktop';
+            deviceStatus.className = 'status desktop';
+        }
+
+        // Display device info
+        const info = [
+            `Platform: ${navigator.platform}`,
+            `Browser: ${navigator.userAgent.split(' ').pop()}`,
+            `Screen: ${window.innerWidth} x ${window.innerHeight}`,
+            `Touch: ${('ontouchstart' in window) ? 'Yes' : 'No'}`
+        ];
+        deviceInfo.innerHTML = info.join('<br>');
+
+        // Try to get local IP (won't work in browser for security, but show hostname)
+        const ipAddress = document.getElementById('ipAddress');
+        const mobileUrl = document.getElementById('mobileUrl');
+
+        // Get hostname from current URL
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            ipAddress.textContent = window.location.hostname;
+        } else {
+            ipAddress.textContent = 'your-local-ip';
+        }
+
+        // Make URL clickable on mobile
+        if (isMobile) {
+            mobileUrl.innerHTML = `<strong>You're already here! 🎉</strong><br>Tap "Launch App" above to start.`;
+        }
+    </script>
+</body>
+</html>
