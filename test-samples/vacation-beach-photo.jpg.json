@@ -1,0 +1,45 @@
+{
+  "title": "vacation-beach-photo.jpg",
+  "description": "Beautiful sunset at the beach during our summer vacation 2024",
+  "imageViews": "15",
+  "creationTime": {
+    "timestamp": "1722556800",
+    "formatted": "Aug 2, 2024, 12:00:00 AM UTC"
+  },
+  "photoTakenTime": {
+    "timestamp": "1722470400",
+    "formatted": "Aug 1, 2024, 12:00:00 AM UTC"
+  },
+  "geoData": {
+    "latitude": 0.0,
+    "longitude": 0.0,
+    "altitude": 0.0,
+    "latitudeSpan": 0.0,
+    "longitudeSpan": 0.0
+  },
+  "geoDataExif": {
+    "latitude": 21.1458,
+    "longitude": 79.0882,
+    "altitude": 310.5,
+    "latitudeSpan": 0.0,
+    "longitudeSpan": 0.0
+  },
+  "people": [
+    {
+      "name": "John Smith"
+    },
+    {
+      "name": "Sarah Johnson"
+    }
+  ],
+  "url": "https://photos.google.com/photo/example123",
+  "googlePhotosOrigin": {
+    "mobileUpload": {
+      "deviceType": "ANDROID_PHONE"
+    }
+  },
+  "photoLastModifiedTime": {
+    "timestamp": "1722643200",
+    "formatted": "Aug 3, 2024, 12:00:00 AM UTC"
+  }
+}

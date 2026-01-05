@@ -1,0 +1,48 @@
+{
+  "title": "family-reunion-2024.jpg",
+  "description": "Annual family reunion at grandmother's house",
+  "imageViews": "42",
+  "creationTime": {
+    "timestamp": "1704067200",
+    "formatted": "Jan 1, 2024, 12:00:00 AM UTC"
+  },
+  "photoTakenTime": {
+    "timestamp": "1704067200",
+    "formatted": "Jan 1, 2024, 12:00:00 AM UTC"
+  },
+  "geoData": {
+    "latitude": 37.7749,
+    "longitude": -122.4194,
+    "altitude": 16.0,
+    "latitudeSpan": 0.0,
+    "longitudeSpan": 0.0
+  },
+  "geoDataExif": {
+    "latitude": 37.7749,
+    "longitude": -122.4194,
+    "altitude": 16.0,
+    "latitudeSpan": 0.0,
+    "longitudeSpan": 0.0
+  },
+  "people": [
+    {
+      "name": "Grandma Rose"
+    },
+    {
+      "name": "Uncle Bob"
+    },
+    {
+      "name": "Cousin Emily"
+    }
+  ],
+  "url": "https://photos.google.com/photo/example456",
+  "googlePhotosOrigin": {
+    "mobileUpload": {
+      "deviceType": "IOS"
+    }
+  },
+  "photoLastModifiedTime": {
+    "timestamp": "1704153600",
+    "formatted": "Jan 2, 2024, 12:00:00 AM UTC"
+  }
+}

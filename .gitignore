@@ -16,6 +16,7 @@ node_modules/
 test-photos/
 test-data/
 *.zip
+!google-takeout-test-sample.zip
 
 # Logs
 *.log

@@ -1,0 +1,38 @@
+{
+  "title": "mountain-hiking-trip.jpg",
+  "description": "Reached the summit after 6 hour hike!",
+  "imageViews": "8",
+  "creationTime": {
+    "timestamp": "1693526400",
+    "formatted": "Sep 1, 2023, 12:00:00 AM UTC"
+  },
+  "photoTakenTime": {
+    "timestamp": "1693526400",
+    "formatted": "Sep 1, 2023, 12:00:00 AM UTC"
+  },
+  "geoData": {
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "altitude": 1500.0,
+    "latitudeSpan": 0.0,
+    "longitudeSpan": 0.0
+  },
+  "geoDataExif": {
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "altitude": 1500.0,
+    "latitudeSpan": 0.0,
+    "longitudeSpan": 0.0
+  },
+  "people": [],
+  "url": "https://photos.google.com/photo/example789",
+  "googlePhotosOrigin": {
+    "mobileUpload": {
+      "deviceType": "ANDROID_PHONE"
+    }
+  },
+  "photoLastModifiedTime": {
+    "timestamp": "1693612800",
+    "formatted": "Sep 2, 2023, 12:00:00 AM UTC"
+  }
+}
