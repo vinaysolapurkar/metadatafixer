@@ -563,6 +563,58 @@ class MetadataFixer {
         });
     }
 
+    async downloadSingleFile(filename) {
+        console.log('Downloading single file:', filename);
+
+        try {
+            // Get custom tags if any
+            const tagInput = document.querySelector(`input[data-filename="${filename}"]`);
+            let customTags = [];
+            if (tagInput && tagInput.value.trim()) {
+                customTags = tagInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            }
+
+            // Find the file in processed files
+            const fileData = this.processedFiles.find(f => f.name === filename);
+            if (!fileData) {
+                alert('File not found!');
+                return;
+            }
+
+            // If custom tags were added, re-process with tags
+            let finalData = fileData.data;
+            if (customTags.length > 0 && fileData.metadata) {
+                console.log('Adding custom tags:', customTags);
+                const updatedMetadata = { ...fileData.metadata, customTags };
+                finalData = await this.embedMetadata(fileData.data, updatedMetadata, filename);
+            }
+
+            // Convert base64 to blob
+            const binaryData = atob(finalData);
+            const bytes = new Uint8Array(binaryData.length);
+            for (let i = 0; i < binaryData.length; i++) {
+                bytes[i] = binaryData.charCodeAt(i);
+            }
+
+            // Create download link
+            const blob = new Blob([bytes], { type: 'image/jpeg' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            console.log('Download started for:', filename);
+
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            alert('Error downloading file: ' + error.message);
+        }
+    }
+
     async downloadProcessedFiles() {
         this.updateStatus('Creating download package...');
 
@@ -570,9 +622,25 @@ class MetadataFixer {
             const zip = new JSZip();
             const folder = zip.folder('fixed-photos');
 
+            // Process each file with custom tags if provided
             for (const file of this.processedFiles) {
+                // Check for custom tags
+                const tagInput = document.querySelector(`input[data-filename="${file.name}"]`);
+                let customTags = [];
+                if (tagInput && tagInput.value.trim()) {
+                    customTags = tagInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+                }
+
+                // Re-process with custom tags if any
+                let finalData = file.data;
+                if (customTags.length > 0 && file.metadata) {
+                    console.log(`Adding custom tags to ${file.name}:`, customTags);
+                    const updatedMetadata = { ...file.metadata, customTags };
+                    finalData = await this.embedMetadata(file.data, updatedMetadata, file.name);
+                }
+
                 // Convert base64 to blob
-                const binaryData = atob(file.data);
+                const binaryData = atob(finalData);
                 const bytes = new Uint8Array(binaryData.length);
                 for (let i = 0; i < binaryData.length; i++) {
                     bytes[i] = binaryData.charCodeAt(i);
@@ -596,7 +664,7 @@ class MetadataFixer {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            this.updateStatus('Download started!');
+            this.updateStatus('Download complete with custom tags!');
 
         } catch (error) {
             console.error('Error creating download:', error);
@@ -608,5 +676,5 @@ class MetadataFixer {
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Metadata Fixer initialized');
-    new MetadataFixer();
+    window.metadataFixer = new MetadataFixer();
 });
