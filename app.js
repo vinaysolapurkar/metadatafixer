@@ -115,16 +115,28 @@ class MetadataFixer {
     async processImageFile(imageFile, jsonMap, zip) {
         try {
             const imageName = imageFile.name.split('/').pop();
-            const jsonName = this.findJsonForImage(imageName, jsonMap);
+            const fullPath = imageFile.name;
+            const jsonName = this.findJsonForImage(fullPath, jsonMap);
 
-            console.log(`Processing: ${imageName}`);
+            console.log(`Processing: ${imageName} (full path: ${fullPath})`);
 
             const imageData = await imageFile.async('base64');
             let metadata = null;
+            let thumbnail = null;
+
+            // Create thumbnail for preview
+            try {
+                thumbnail = 'data:image/jpeg;base64,' + imageData;
+            } catch (e) {
+                console.log('Could not create thumbnail:', e);
+            }
 
             if (jsonName) {
                 metadata = jsonMap.get(jsonName);
-                console.log(`Found metadata for ${imageName}:`, metadata);
+                console.log(`✅ Found metadata for ${imageName}:`, metadata);
+            } else {
+                console.warn(`⚠️ No metadata JSON found for ${imageName}`);
+                console.log('Available JSON files:', Array.from(jsonMap.keys()).map(k => k.split('/').pop()).slice(0, 10));
             }
 
             // Process the image with metadata
@@ -133,7 +145,8 @@ class MetadataFixer {
             this.processedFiles.push({
                 name: imageName,
                 data: processedImage,
-                hadMetadata: !!metadata
+                hadMetadata: !!metadata,
+                metadata: metadata
             });
 
             this.stats.processed++;
@@ -141,7 +154,7 @@ class MetadataFixer {
                 this.stats.withMetadata++;
             }
 
-            this.addFileToList(imageName, !!metadata);
+            this.addFileToList(imageName, !!metadata, false, metadata, thumbnail);
 
         } catch (error) {
             console.error(`Error processing ${imageFile.name}:`, error);
@@ -151,31 +164,74 @@ class MetadataFixer {
     }
 
     findJsonForImage(imageName, jsonMap) {
-        // Try direct match: image.jpg -> image.jpg.json
-        const directMatch = imageName + '.json';
+        console.log(`Looking for JSON match for: ${imageName}`);
+
+        // Get just the filename without directory path
+        const baseImageName = imageName.split('/').pop();
+
+        // Strategy 1: Direct match - image.jpg -> image.jpg.json
+        const directMatch = baseImageName + '.json';
         for (const key of jsonMap.keys()) {
-            if (key.endsWith(directMatch)) {
+            const keyBase = key.split('/').pop();
+            if (keyBase === directMatch) {
+                console.log(`✅ Direct match found: ${key}`);
                 return key;
             }
         }
 
-        // Try without extension: image.jpg -> image.json
-        const nameWithoutExt = imageName.replace(/\.[^/.]+$/, '');
+        // Strategy 2: Without extension - image.jpg -> image.json
+        const nameWithoutExt = baseImageName.replace(/\.[^/.]+$/, '');
         const altMatch = nameWithoutExt + '.json';
         for (const key of jsonMap.keys()) {
-            if (key.endsWith(altMatch)) {
+            const keyBase = key.split('/').pop();
+            if (keyBase === altMatch) {
+                console.log(`✅ Alt match found: ${key}`);
                 return key;
             }
         }
 
-        // Try handling duplicates: image(1).jpg -> image.jpg(1).json
-        const dupMatch = imageName.replace(/\((\d+)\)\.([^.]+)$/, '.$2($1).json');
+        // Strategy 3: Duplicates - image(1).jpg -> image.jpg(1).json
+        const dupMatch = baseImageName.replace(/\((\d+)\)\.([^.]+)$/, '.$2($1).json');
         for (const key of jsonMap.keys()) {
-            if (key.endsWith(dupMatch)) {
+            const keyBase = key.split('/').pop();
+            if (keyBase === dupMatch) {
+                console.log(`✅ Duplicate match found: ${key}`);
                 return key;
             }
         }
 
+        // Strategy 4: Edited files - IMG_1234-edited.jpg -> IMG_1234.jpg.json
+        const editedMatch = baseImageName.replace(/-edited\.([^.]+)$/, '.$1.json');
+        for (const key of jsonMap.keys()) {
+            const keyBase = key.split('/').pop();
+            if (keyBase === editedMatch) {
+                console.log(`✅ Edited match found: ${key}`);
+                return key;
+            }
+        }
+
+        // Strategy 5: Case-insensitive match
+        const lowerImageName = baseImageName.toLowerCase();
+        const lowerDirectMatch = (lowerImageName + '.json').toLowerCase();
+        for (const key of jsonMap.keys()) {
+            const keyBase = key.split('/').pop().toLowerCase();
+            if (keyBase === lowerDirectMatch) {
+                console.log(`✅ Case-insensitive match found: ${key}`);
+                return key;
+            }
+        }
+
+        // Strategy 6: Partial match (last resort) - match by base name
+        for (const key of jsonMap.keys()) {
+            const keyBase = key.split('/').pop();
+            const keyWithoutJson = keyBase.replace(/\.json$/, '');
+            if (baseImageName.includes(keyWithoutJson) || keyWithoutJson.includes(nameWithoutExt)) {
+                console.log(`⚠️ Partial match found: ${key}`);
+                return key;
+            }
+        }
+
+        console.log(`❌ No JSON match found for: ${imageName}`);
         return null;
     }
 
@@ -403,22 +459,77 @@ class MetadataFixer {
         document.getElementById('progressFill').style.width = percentage + '%';
     }
 
-    addFileToList(filename, hadMetadata, isError = false) {
+    addFileToList(filename, hadMetadata, isError = false, metadata = null, thumbnail = null) {
         const filesList = document.getElementById('filesList');
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item';
 
         if (isError) {
             fileItem.classList.add('error');
-            fileItem.innerHTML = `<span>❌</span> <span>${filename} - Failed</span>`;
-        } else if (hadMetadata) {
+            fileItem.innerHTML = `
+                <div class="file-preview">
+                    <span class="file-icon">❌</span>
+                    <div class="file-details">
+                        <div class="file-name">${filename}</div>
+                        <div class="file-status error-text">Failed to process</div>
+                    </div>
+                </div>
+            `;
+        } else if (hadMetadata && metadata) {
+            const metadataHtml = this.createMetadataPreview(metadata);
             fileItem.classList.add('success');
-            fileItem.innerHTML = `<span>✅</span> <span>${filename} - Metadata restored</span>`;
+            fileItem.innerHTML = `
+                <div class="file-preview">
+                    ${thumbnail ? `<img src="${thumbnail}" class="file-thumbnail" alt="${filename}">` : '<span class="file-icon">📷</span>'}
+                    <div class="file-details">
+                        <div class="file-name">${filename}</div>
+                        <div class="file-status success-text">✅ Metadata restored</div>
+                        <div class="metadata-summary">${metadataHtml}</div>
+                    </div>
+                </div>
+            `;
         } else {
-            fileItem.innerHTML = `<span>⚠️</span> <span>${filename} - No metadata found</span>`;
+            fileItem.classList.add('warning');
+            fileItem.innerHTML = `
+                <div class="file-preview">
+                    ${thumbnail ? `<img src="${thumbnail}" class="file-thumbnail" alt="${filename}">` : '<span class="file-icon">⚠️</span>'}
+                    <div class="file-details">
+                        <div class="file-name">${filename}</div>
+                        <div class="file-status warning-text">⚠️ No metadata JSON found</div>
+                        <div class="metadata-hint">Check if JSON file exists for this image</div>
+                    </div>
+                </div>
+            `;
         }
 
         filesList.appendChild(fileItem);
+    }
+
+    createMetadataPreview(metadata) {
+        const items = [];
+
+        if (metadata.photoTakenTime) {
+            const date = new Date(parseInt(metadata.photoTakenTime.timestamp) * 1000);
+            items.push(`📅 ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`);
+        }
+
+        if (metadata.geoDataExif?.latitude && metadata.geoDataExif?.longitude) {
+            items.push(`📍 ${metadata.geoDataExif.latitude.toFixed(4)}, ${metadata.geoDataExif.longitude.toFixed(4)}`);
+        } else if (metadata.geoData?.latitude && metadata.geoData?.longitude) {
+            items.push(`📍 ${metadata.geoData.latitude.toFixed(4)}, ${metadata.geoData.longitude.toFixed(4)}`);
+        }
+
+        if (metadata.people && metadata.people.length > 0) {
+            const names = metadata.people.map(p => p.name).filter(n => n).slice(0, 2);
+            items.push(`👥 ${names.join(', ')}${metadata.people.length > 2 ? '...' : ''}`);
+        }
+
+        if (metadata.description) {
+            const desc = metadata.description.substring(0, 50);
+            items.push(`💬 ${desc}${metadata.description.length > 50 ? '...' : ''}`);
+        }
+
+        return items.join(' • ');
     }
 
     showResults() {
