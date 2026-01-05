@@ -50,14 +50,24 @@ Import the processed photos to:
 
 ### What Metadata Gets Restored
 
-| JSON Field | EXIF Tag | Description |
-|------------|----------|-------------|
-| photoTakenTime.timestamp | DateTimeOriginal | Original capture time |
-| geoDataExif.latitude | GPSLatitude | GPS latitude |
-| geoDataExif.longitude | GPSLongitude | GPS longitude |
-| geoDataExif.altitude | GPSAltitude | GPS altitude |
-| description | ImageDescription | User description |
-| title | DocumentName | Original filename |
+| JSON Field | EXIF Tags | Description |
+|------------|-----------|-------------|
+| photoTakenTime.timestamp | DateTimeOriginal, DateTimeDigitized, DateTime, GPSTimeStamp, GPSDateStamp | Primary capture time |
+| creationTime.timestamp | DateTime (fallback) | Upload/creation time |
+| photoLastModifiedTime.timestamp | SubSecTime | Last modification |
+| geoDataExif.latitude | GPSLatitude, GPSLatitudeRef | GPS latitude (DMS format) |
+| geoDataExif.longitude | GPSLongitude, GPSLongitudeRef | GPS longitude (DMS format) |
+| geoDataExif.altitude | GPSAltitude, GPSAltitudeRef | GPS altitude with reference |
+| title | DocumentName, XPTitle | Original filename (ASCII + UTF-16) |
+| description | ImageDescription, UserComment, XPComment | Description in 3 formats |
+| people[].name | Artist, XPAuthor, XPKeywords | People names (semicolon-separated) |
+| imageViews | Rating | View count → 0-5 star rating |
+| url | Copyright | Google Photos URL |
+| googlePhotosOrigin | Make, Model | Device info (Google Photos, device type) |
+| - | Software, ProcessingSoftware | "Metadata Fixer" branding |
+| - | ExifVersion, ColorSpace, Orientation | Technical metadata (EXIF 2.31, sRGB) |
+
+**📚 See [METADATA_MAPPING.md](METADATA_MAPPING.md) for complete technical details, validation instructions, and comparison with commercial tools.**
 
 ### How It Works
 
