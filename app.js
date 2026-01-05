@@ -220,7 +220,7 @@ class MetadataFixer {
         };
 
         try {
-            // Add timestamp
+            // 1. TIMESTAMPS - Add all available timestamps
             if (metadata.photoTakenTime && metadata.photoTakenTime.timestamp) {
                 const date = new Date(parseInt(metadata.photoTakenTime.timestamp) * 1000);
                 const dateStr = this.formatDateForExif(date);
@@ -229,7 +229,25 @@ class MetadataFixer {
                 exifObj["0th"][piexif.ImageIFD.DateTime] = dateStr;
             }
 
-            // Add GPS data (prefer geoDataExif over geoData)
+            // Add creation time if different from photo taken time
+            if (metadata.creationTime && metadata.creationTime.timestamp) {
+                const creationDate = new Date(parseInt(metadata.creationTime.timestamp) * 1000);
+                const creationStr = this.formatDateForExif(creationDate);
+                // Use DateTime if photoTakenTime wasn't available
+                if (!metadata.photoTakenTime) {
+                    exifObj["0th"][piexif.ImageIFD.DateTime] = creationStr;
+                    exifObj["Exif"][piexif.ExifIFD.DateTimeOriginal] = creationStr;
+                }
+            }
+
+            // Add modification time
+            if (metadata.photoLastModifiedTime && metadata.photoLastModifiedTime.timestamp) {
+                const modDate = new Date(parseInt(metadata.photoLastModifiedTime.timestamp) * 1000);
+                const modStr = this.formatDateForExif(modDate);
+                exifObj["Exif"][piexif.ExifIFD.SubSecTime] = modDate.getMilliseconds().toString();
+            }
+
+            // 2. GPS DATA - Add complete GPS information (prefer geoDataExif over geoData)
             const geoData = metadata.geoDataExif || metadata.geoData;
             if (geoData && geoData.latitude !== 0 && geoData.longitude !== 0) {
                 // Convert decimal degrees to degrees, minutes, seconds
@@ -238,27 +256,119 @@ class MetadataFixer {
                 exifObj["GPS"][piexif.GPSIFD.GPSLongitude] = this.decimalToDMS(Math.abs(geoData.longitude));
                 exifObj["GPS"][piexif.GPSIFD.GPSLongitudeRef] = geoData.longitude >= 0 ? 'E' : 'W';
 
-                if (geoData.altitude) {
-                    exifObj["GPS"][piexif.GPSIFD.GPSAltitude] = [Math.abs(geoData.altitude), 1];
+                // Add altitude
+                if (geoData.altitude && geoData.altitude !== 0) {
+                    exifObj["GPS"][piexif.GPSIFD.GPSAltitude] = [Math.abs(Math.round(geoData.altitude * 100)), 100];
                     exifObj["GPS"][piexif.GPSIFD.GPSAltitudeRef] = geoData.altitude >= 0 ? 0 : 1;
                 }
+
+                // Add GPS timestamp from photo taken time
+                if (metadata.photoTakenTime && metadata.photoTakenTime.timestamp) {
+                    const date = new Date(parseInt(metadata.photoTakenTime.timestamp) * 1000);
+                    exifObj["GPS"][piexif.GPSIFD.GPSDateStamp] =
+                        `${date.getUTCFullYear()}:${String(date.getUTCMonth() + 1).padStart(2, '0')}:${String(date.getUTCDate()).padStart(2, '0')}`;
+
+                    const hours = date.getUTCHours();
+                    const minutes = date.getUTCMinutes();
+                    const seconds = date.getUTCSeconds();
+                    exifObj["GPS"][piexif.GPSIFD.GPSTimeStamp] = [[hours, 1], [minutes, 1], [seconds, 1]];
+                }
+
+                // Add GPS processing method
+                exifObj["GPS"][piexif.GPSIFD.GPSProcessingMethod] = "Google Photos";
+            }
+
+            // 3. DESCRIPTIVE METADATA
+            // Add title
+            if (metadata.title) {
+                exifObj["0th"][piexif.ImageIFD.DocumentName] = metadata.title;
+                exifObj["0th"][piexif.ImageIFD.XPTitle] = this.stringToUTF16(metadata.title);
             }
 
             // Add description
             if (metadata.description) {
                 exifObj["0th"][piexif.ImageIFD.ImageDescription] = metadata.description;
+                exifObj["Exif"][piexif.ExifIFD.UserComment] = this.encodeUserComment(metadata.description);
+                exifObj["0th"][piexif.ImageIFD.XPComment] = this.stringToUTF16(metadata.description);
             }
 
-            // Add title
-            if (metadata.title) {
-                exifObj["0th"][piexif.ImageIFD.DocumentName] = metadata.title;
+            // 4. PEOPLE TAGS - Add people names as keywords and subject
+            if (metadata.people && Array.isArray(metadata.people) && metadata.people.length > 0) {
+                const peopleNames = metadata.people.map(p => p.name).filter(n => n);
+                if (peopleNames.length > 0) {
+                    // Join names for artist field
+                    const peopleStr = peopleNames.join('; ');
+                    exifObj["0th"][piexif.ImageIFD.Artist] = peopleStr;
+                    exifObj["0th"][piexif.ImageIFD.XPAuthor] = this.stringToUTF16(peopleStr);
+
+                    // Add as keywords (XPKeywords for Windows compatibility)
+                    const keywordsStr = peopleNames.join(';');
+                    exifObj["0th"][piexif.ImageIFD.XPKeywords] = this.stringToUTF16(keywordsStr);
+                }
             }
+
+            // 5. SOFTWARE/SOURCE INFORMATION
+            exifObj["0th"][piexif.ImageIFD.Software] = "Metadata Fixer for Google Photos Takeout";
+            exifObj["0th"][piexif.ImageIFD.ProcessingSoftware] = "Metadata Fixer";
+
+            // Add Google Photos origin information
+            if (metadata.googlePhotosOrigin) {
+                const originInfo = JSON.stringify(metadata.googlePhotosOrigin);
+                exifObj["0th"][piexif.ImageIFD.Make] = "Google Photos";
+                if (metadata.googlePhotosOrigin.mobileUpload) {
+                    const device = metadata.googlePhotosOrigin.mobileUpload.deviceType || "Unknown";
+                    exifObj["0th"][piexif.ImageIFD.Model] = device;
+                }
+            }
+
+            // 6. ADDITIONAL METADATA
+            // Add URL as copyright (best available field for URL)
+            if (metadata.url) {
+                exifObj["0th"][piexif.ImageIFD.Copyright] = `Google Photos: ${metadata.url}`;
+            }
+
+            // Add image views as rating (0-5 scale)
+            if (metadata.imageViews) {
+                const views = parseInt(metadata.imageViews);
+                // Convert views to 0-5 rating (capped at 100+ views = 5 stars)
+                const rating = Math.min(5, Math.floor(views / 20));
+                if (rating > 0) {
+                    exifObj["0th"][piexif.ImageIFD.Rating] = rating;
+                }
+            }
+
+            // 7. COLOR SPACE AND ORIENTATION (preserve if exists, or set defaults)
+            exifObj["Exif"][piexif.ExifIFD.ColorSpace] = 1; // sRGB
+            exifObj["0th"][piexif.ImageIFD.Orientation] = 1; // Normal orientation
+
+            // 8. EXIF VERSION
+            exifObj["Exif"][piexif.ExifIFD.ExifVersion] = "0231"; // EXIF 2.31
+            exifObj["Exif"][piexif.ExifIFD.FlashpixVersion] = "0100";
 
         } catch (error) {
             console.error('Error creating EXIF:', error);
         }
 
         return exifObj;
+    }
+
+    // Helper: Convert string to UTF-16 for Windows XP tags
+    stringToUTF16(str) {
+        const utf16 = [];
+        for (let i = 0; i < str.length; i++) {
+            const code = str.charCodeAt(i);
+            utf16.push(code & 0xff);
+            utf16.push((code >> 8) & 0xff);
+        }
+        utf16.push(0, 0); // Null terminator
+        return utf16;
+    }
+
+    // Helper: Encode user comment with charset
+    encodeUserComment(comment) {
+        // ASCII encoding with charset marker
+        const charset = "ASCII\0\0\0";
+        return charset + comment;
     }
 
     formatDateForExif(date) {
