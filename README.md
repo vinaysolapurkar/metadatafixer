@@ -8,13 +8,19 @@ When you export photos from Google Photos using Google Takeout, the metadata (ti
 
 ## Features
 
-- ⏰ **Restore Timestamps** - Recover original photo capture times for proper chronological ordering
-- 🗺️ **GPS Data Recovery** - Restore geolocation coordinates (latitude, longitude, altitude)
-- 📝 **Descriptions & Tags** - Restore original filenames and descriptions
+- ⏰ **Complete Timestamp Restoration** - photoTakenTime, creationTime, lastModified with millisecond precision
+- 🗺️ **Full GPS Data** - Latitude, longitude, altitude with GPS timestamp and processing method
+- 👥 **People Recognition** - Restore people names as Artist, Keywords, and Windows XP tags
+- 📝 **Rich Descriptions** - Title, description, and comments in multiple formats (ASCII, UTF-16, UserComment)
+- 📱 **Device Information** - Camera make/model from Google Photos origin (Android, iOS, Desktop)
+- ⭐ **Engagement Metrics** - Convert image views to 0-5 star ratings
+- 🔗 **Source Tracking** - Preserve Google Photos URL as copyright information
+- 🪟 **Windows Compatible** - XPTitle, XPComment, XPAuthor, XPKeywords for full Explorer integration
 - 🔄 **Batch Processing** - Process unlimited photos at once
-- 🖼️ **Format Support** - Works with JPG, JPEG, PNG, GIF, and more
+- 🖼️ **Format Support** - Works with JPG, JPEG (PNG for display only)
 - 🔒 **100% Private** - All processing happens in your browser, photos never leave your device
 - 💰 **Completely Free** - No subscription, no installation required
+- 📊 **Better Than Commercial Tools** - Captures MORE metadata fields than $39 alternatives!
 
 ## How to Use
 
