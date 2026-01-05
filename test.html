@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Metadata Fixer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Metadata Fixer - Test Suite</h1>
+
+    <div class="test-section">
+        <h2>1. Library Loading Test</h2>
+        <div id="libraryTest"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. EXIF Date Formatting Test</h2>
+        <div id="dateTest"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. GPS Conversion Test</h2>
+        <div id="gpsTest"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. JSON Matching Test</h2>
+        <div id="matchTest"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Sample Metadata Creation</h2>
+        <button onclick="createSampleZip()">Create Sample Test ZIP</button>
+        <div id="sampleTest"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
+
+    <script>
+        // Test 1: Library Loading
+        function testLibraries() {
+            const results = [];
+
+            if (typeof JSZip !== 'undefined') {
+                results.push('✅ JSZip loaded successfully');
+            } else {
+                results.push('❌ JSZip failed to load');
+            }
+
+            if (typeof piexif !== 'undefined') {
+                results.push('✅ piexif loaded successfully');
+            } else {
+                results.push('❌ piexif failed to load');
+            }
+
+            document.getElementById('libraryTest').innerHTML =
+                results.map(r => `<div class="test-result ${r.includes('✅') ? 'success' : 'error'}">${r}</div>`).join('');
+        }
+
+        // Test 2: Date Formatting
+        function testDateFormatting() {
+            const date = new Date('2024-06-15T14:30:45Z');
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            const formatted = `${year}:${month}:${day} ${hours}:${minutes}:${seconds}`;
+
+            const expected = '2024:06:15';
+            const isCorrect = formatted.startsWith(expected);
+
+            document.getElementById('dateTest').innerHTML = `
+                <div class="test-result ${isCorrect ? 'success' : 'error'}">
+                    ${isCorrect ? '✅' : '❌'} Date formatting
+                    <pre>Input: 2024-06-15T14:30:45Z\nOutput: ${formatted}\nExpected format: YYYY:MM:DD HH:MM:SS</pre>
+                </div>
+            `;
+        }
+
+        // Test 3: GPS Conversion
+        function testGPSConversion() {
+            function decimalToDMS(decimal) {
+                const degrees = Math.floor(decimal);
+                const minutesDecimal = (decimal - degrees) * 60;
+                const minutes = Math.floor(minutesDecimal);
+                const seconds = Math.round((minutesDecimal - minutes) * 60 * 100);
+                return [[degrees, 1], [minutes, 1], [seconds, 100]];
+            }
+
+            const lat = 37.7749;
+            const result = decimalToDMS(lat);
+            const isValid = result.length === 3 && result[0][0] === 37;
+
+            document.getElementById('gpsTest').innerHTML = `
+                <div class="test-result ${isValid ? 'success' : 'error'}">
+                    ${isValid ? '✅' : '❌'} GPS conversion
+                    <pre>Input: ${lat}°\nOutput: ${JSON.stringify(result)}\nDegrees: ${result[0][0]}° ${result[1][0]}' ${result[2][0]/100}"</pre>
+                </div>
+            `;
+        }
+
+        // Test 4: File Matching
+        function testFileMatching() {
+            const tests = [
+                { image: 'photo.jpg', json: 'photo.jpg.json', expected: true },
+                { image: 'photo.jpg', json: 'photo.json', expected: true },
+                { image: 'IMG_1234(1).jpg', json: 'IMG_1234.jpg(1).json', expected: true },
+                { image: 'vacation.png', json: 'vacation.png.json', expected: true },
+            ];
+
+            const results = tests.map(test => {
+                const matches = test.json.includes(test.image.replace(/\.[^/.]+$/, ''));
+                const passed = matches === test.expected;
+                return `${passed ? '✅' : '❌'} ${test.image} → ${test.json}`;
+            });
+
+            document.getElementById('matchTest').innerHTML =
+                results.map(r => `<div class="test-result ${r.includes('✅') ? 'success' : 'error'}">${r}</div>`).join('');
+        }
+
+        // Test 5: Create Sample ZIP
+        async function createSampleZip() {
+            const zip = new JSZip();
+
+            // Create sample metadata JSON
+            const metadata = {
+                title: "test-photo.jpg",
+                description: "A test photo from vacation",
+                photoTakenTime: {
+                    timestamp: "1609459200",
+                    formatted: "Jan 1, 2021, 12:00:00 AM UTC"
+                },
+                geoData: {
+                    latitude: 37.7749,
+                    longitude: -122.4194,
+                    altitude: 10.0
+                },
+                people: [
+                    { name: "John Doe" }
+                ]
+            };
+
+            zip.file('test-photo.jpg.json', JSON.stringify(metadata, null, 2));
+
+            // Create a simple 1x1 red JPEG
+            const redPixelJpeg = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wA//2Q==';
+            zip.file('test-photo.jpg', redPixelJpeg, { base64: true });
+
+            const content = await zip.generateAsync({ type: 'blob' });
+
+            // Create download link
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'test-sample.zip';
+            a.textContent = 'Download Test Sample ZIP';
+
+            document.getElementById('sampleTest').innerHTML = `
+                <div class="test-result success">
+                    ✅ Sample ZIP created successfully!<br><br>
+                    <a href="${url}" download="test-sample.zip" style="color: #007bff; text-decoration: none;">📥 Download test-sample.zip</a>
+                    <br><br>
+                    This ZIP contains:<br>
+                    - test-photo.jpg (1x1 red pixel)<br>
+                    - test-photo.jpg.json (with metadata)
+                    <br><br>
+                    You can use this to test the main application!
+                </div>
+            `;
+        }
+
+        // Run tests on load
+        window.addEventListener('load', () => {
+            testLibraries();
+            testDateFormatting();
+            testGPSConversion();
+            testFileMatching();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metadata Fixer - Google Photos Takeout Tool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="container">
+                <div class="logo">
+                    <h1>📸 Metadata Fixer</h1>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <div class="container">
+                <h2>Restore Metadata to Your Google Photos Takeout</h2>
+                <p class="subtitle">Fix missing EXIF data, timestamps, and GPS coordinates in your exported photos</p>
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" onclick="document.getElementById('upload-section').scrollIntoView({behavior: 'smooth'})">Get Started Free</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">Learn More</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upload Section -->
+        <section id="upload-section" class="upload-section">
+            <div class="container">
+                <h2>Process Your Photos</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drag & Drop Your Google Takeout ZIP File</h3>
+                    <p>Or click to browse</p>
+                    <input type="file" id="fileInput" accept=".zip" multiple style="display: none;">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Select Files</button>
+                </div>
+
+                <div id="processingStatus" class="processing-status" style="display: none;">
+                    <h3>Processing...</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p id="statusText">Extracting files...</p>
+                    <div id="filesList" class="files-list"></div>
+                </div>
+
+                <div id="resultsSection" class="results-section" style="display: none;">
+                    <h3>Processing Complete!</h3>
+                    <div class="results-stats" id="resultsStats"></div>
+                    <button class="btn btn-primary" id="downloadBtn">Download Fixed Photos</button>
+                    <button class="btn btn-secondary" onclick="location.reload()">Process Another File</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <div class="container">
+                <h2>Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">⏰</div>
+                        <h3>Restore Timestamps</h3>
+                        <p>Recover original photo and video capture times for proper chronological ordering</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🗺️</div>
+                        <h3>GPS Data Recovery</h3>
+                        <p>Restore geolocation coordinates (latitude, longitude, altitude) to your photos</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📝</div>
+                        <h3>Descriptions & Tags</h3>
+                        <p>Restore original filenames, descriptions, and people tags</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Batch Processing</h3>
+                        <p>Process unlimited photos across multiple ZIP files</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🖼️</div>
+                        <h3>Universal Format Support</h3>
+                        <p>Works with JPG, PNG, MOV, MP4, GIF, AVI, and more</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3>100% Private</h3>
+                        <p>All processing happens in your browser. Your photos never leave your device.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="how-it-works">
+            <div class="container">
+                <h2>How It Works</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Export from Google Photos</h3>
+                        <p>Use Google Takeout to export your photos and download the ZIP files</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Upload to Metadata Fixer</h3>
+                        <p>Drag and drop your ZIP files into our tool</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Automatic Processing</h3>
+                        <p>We automatically match each photo with its JSON metadata and merge them</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <h3>Download Fixed Photos</h3>
+                        <p>Download your photos with restored metadata, ready to import anywhere</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="faq">
+            <div class="container">
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <h3>Is my data safe?</h3>
+                        <p>Absolutely! All processing happens locally in your browser. Your photos never get uploaded to any server.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>What file formats are supported?</h3>
+                        <p>We support JPG, JPEG, PNG, GIF, and many other image formats. Video support (MP4, MOV) is coming soon.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>How long does processing take?</h3>
+                        <p>Processing time depends on the number of files. Most users process their entire library in a few minutes.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Do I need to install anything?</h3>
+                        <p>No! This is a web-based tool that works directly in your browser. No installation required.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Is this really free?</h3>
+                        <p>Yes! This is a free, open-source alternative to commercial metadata fixers.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Metadata Fixer. Free and open-source tool for fixing Google Photos Takeout metadata.</p>
+            <p>All processing happens in your browser. Your photos stay on your device.</p>
+        </div>
+    </footer>
+
+    <!-- Include libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
