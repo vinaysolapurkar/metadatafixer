@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Access QR Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .qr-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        #qrcode {
+            margin: 20px auto;
+            display: inline-block;
+        }
+        .url-box {
+            background: #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 18px;
+            word-break: break-all;
+        }
+        .instructions {
+            text-align: left;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f0f9ff;
+            border-radius: 8px;
+        }
+        .instructions ol {
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 10px 0;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .success {
+            color: #059669;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc2626;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Scan to Access on Mobile</h1>
+
+        <div class="instructions">
+            <h3>🎯 How to Use:</h3>
+            <ol>
+                <li><strong>Connect your mobile</strong> to the same WiFi as this computer</li>
+                <li><strong>Scan the QR code</strong> with your phone's camera</li>
+                <li><strong>Tap the notification</strong> to open in browser</li>
+                <li>Start fixing your photos!</li>
+            </ol>
+        </div>
+
+        <div class="qr-container">
+            <h3>Scan This QR Code:</h3>
+            <div id="qrcode"></div>
+            <div class="url-box" id="urlBox">
+                <span id="currentUrl">Loading...</span>
+            </div>
+            <button onclick="copyUrl()">📋 Copy URL</button>
+            <button onclick="regenerateQR()">🔄 Refresh</button>
+        </div>
+
+        <div class="instructions">
+            <h3>⚠️ Can't Scan?</h3>
+            <p>Type this URL manually on your mobile browser:</p>
+            <div style="background: white; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                <strong id="manualUrl">http://21.0.0.124:8000</strong>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+            <h3>🔐 Alternative: GitHub Pages</h3>
+            <p>For permanent access from anywhere, deploy to GitHub Pages!</p>
+            <p>See <strong>EASY_MOBILE_ACCESS.md</strong> for instructions.</p>
+        </div>
+    </div>
+
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        // Get current URL or use local IP
+        let accessUrl = window.location.href.replace('QR-CODE.html', 'index.html');
+
+        // If running on localhost, use the local IP
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            accessUrl = 'http://21.0.0.124:8000/index.html';
+        }
+
+        // Display URLs
+        document.getElementById('currentUrl').textContent = accessUrl;
+        document.getElementById('manualUrl').textContent = accessUrl;
+
+        // Generate QR Code
+        function generateQR() {
+            document.getElementById('qrcode').innerHTML = '';
+            new QRCode(document.getElementById('qrcode'), {
+                text: accessUrl,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function copyUrl() {
+            navigator.clipboard.writeText(accessUrl).then(() => {
+                alert('✅ URL copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = accessUrl;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ URL copied to clipboard!');
+            });
+        }
+
+        function regenerateQR() {
+            generateQR();
+            alert('🔄 QR Code refreshed!');
+        }
+
+        // Generate QR code on load
+        window.addEventListener('load', generateQR);
+    </script>
+</body>
+</html>
