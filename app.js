@@ -697,25 +697,49 @@ class MetadataFixer {
     createMetadataPreview(metadata) {
         const items = [];
 
+        // Date/Time
         if (metadata.photoTakenTime) {
             const date = new Date(parseInt(metadata.photoTakenTime.timestamp) * 1000);
             items.push(`📅 ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`);
         }
 
-        if (metadata.geoDataExif?.latitude && metadata.geoDataExif?.longitude) {
+        // GPS Location
+        if (metadata.geoDataExif?.latitude && metadata.geoDataExif?.longitude &&
+            (metadata.geoDataExif.latitude !== 0 || metadata.geoDataExif.longitude !== 0)) {
             items.push(`📍 ${metadata.geoDataExif.latitude.toFixed(4)}, ${metadata.geoDataExif.longitude.toFixed(4)}`);
-        } else if (metadata.geoData?.latitude && metadata.geoData?.longitude) {
+        } else if (metadata.geoData?.latitude && metadata.geoData?.longitude &&
+            (metadata.geoData.latitude !== 0 || metadata.geoData.longitude !== 0)) {
             items.push(`📍 ${metadata.geoData.latitude.toFixed(4)}, ${metadata.geoData.longitude.toFixed(4)}`);
         }
 
+        // People Tags
         if (metadata.people && metadata.people.length > 0) {
-            const names = metadata.people.map(p => p.name).filter(n => n).slice(0, 2);
-            items.push(`👥 ${names.join(', ')}${metadata.people.length > 2 ? '...' : ''}`);
+            const names = metadata.people.map(p => p.name).filter(n => n).slice(0, 3);
+            if (names.length > 0) {
+                items.push(`👥 ${names.join(', ')}${metadata.people.length > 3 ? '...' : ''}`);
+            }
         }
 
+        // Title
+        if (metadata.title) {
+            const title = metadata.title.substring(0, 40);
+            items.push(`📝 ${title}${metadata.title.length > 40 ? '...' : ''}`);
+        }
+
+        // Description
         if (metadata.description) {
-            const desc = metadata.description.substring(0, 50);
-            items.push(`💬 ${desc}${metadata.description.length > 50 ? '...' : ''}`);
+            const desc = metadata.description.substring(0, 40);
+            items.push(`💬 ${desc}${metadata.description.length > 40 ? '...' : ''}`);
+        }
+
+        // Device Info
+        if (metadata.googlePhotosOrigin?.mobileUpload?.deviceType) {
+            items.push(`📱 ${metadata.googlePhotosOrigin.mobileUpload.deviceType}`);
+        }
+
+        // If no rich metadata, show what we have
+        if (items.length === 0) {
+            items.push('📋 Basic metadata only (date/device)');
         }
 
         return items.join(' • ');
