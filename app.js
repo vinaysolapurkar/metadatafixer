@@ -731,14 +731,8 @@ class MetadataFixer {
             }
         }
 
-        // Title
-        if (metadata.title) {
-            const title = metadata.title.substring(0, 40);
-            items.push(`📝 ${title}${metadata.title.length > 40 ? '...' : ''}`);
-        }
-
-        // Description
-        if (metadata.description) {
+        // Description (only if not empty)
+        if (metadata.description && metadata.description.trim()) {
             const desc = metadata.description.substring(0, 40);
             items.push(`💬 ${desc}${metadata.description.length > 40 ? '...' : ''}`);
         }
@@ -748,9 +742,17 @@ class MetadataFixer {
             items.push(`📱 ${metadata.googlePhotosOrigin.mobileUpload.deviceType}`);
         }
 
-        // If no rich metadata, show what we have
+        // Image Views (converted to stars)
+        if (metadata.imageViews) {
+            const views = parseInt(metadata.imageViews);
+            if (views > 0) {
+                items.push(`👁 ${views} views`);
+            }
+        }
+
+        // If no metadata items, show basic message
         if (items.length === 0) {
-            items.push('📋 Basic metadata only (date/device)');
+            items.push('📋 Basic metadata only');
         }
 
         return items.join(' • ');
