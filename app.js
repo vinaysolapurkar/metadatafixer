@@ -653,6 +653,9 @@ class MetadataFixer {
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item';
 
+        // Escape filename for use in attributes
+        const safeFilename = filename.replace(/"/g, '&quot;');
+
         if (isError) {
             fileItem.classList.add('error');
             fileItem.innerHTML = `
@@ -674,6 +677,10 @@ class MetadataFixer {
                         <div class="file-name">${filename}</div>
                         <div class="file-status success-text">✅ Metadata restored</div>
                         <div class="metadata-summary">${metadataHtml}</div>
+                        <div class="file-actions">
+                            <input type="text" class="custom-tags-input" data-filename="${safeFilename}" placeholder="Add custom tags (comma-separated)">
+                            <button class="btn btn-small btn-download" onclick="window.metadataFixer.downloadSingleFile('${safeFilename}')">Download</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -685,7 +692,11 @@ class MetadataFixer {
                     <div class="file-details">
                         <div class="file-name">${filename}</div>
                         <div class="file-status warning-text">⚠️ No metadata JSON found</div>
-                        <div class="metadata-hint">Check if JSON file exists for this image</div>
+                        <div class="metadata-hint">Image processed without metadata</div>
+                        <div class="file-actions">
+                            <input type="text" class="custom-tags-input" data-filename="${safeFilename}" placeholder="Add custom tags (comma-separated)">
+                            <button class="btn btn-small btn-download" onclick="window.metadataFixer.downloadSingleFile('${safeFilename}')">Download</button>
+                        </div>
                     </div>
                 </div>
             `;
