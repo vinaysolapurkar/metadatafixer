@@ -310,12 +310,14 @@ nav .container {
 }
 
 .metadata-summary {
-    font-size: 0.8rem;
-    color: #6b7280;
-    line-height: 1.5;
-    padding-top: 0.5rem;
-    border-top: 1px solid #e5e7eb;
+    font-size: 0.85rem;
+    color: #374151;
+    line-height: 1.8;
+    padding: 0.75rem;
+    background-color: #f9fafb;
+    border-radius: 6px;
     margin-top: 0.5rem;
+    word-wrap: break-word;
 }
 
 .metadata-hint {

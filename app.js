@@ -136,9 +136,10 @@ class MetadataFixer {
             let metadata = null;
             let thumbnail = null;
 
-            // Create thumbnail for preview
+            // Create thumbnail for preview with correct MIME type
             try {
-                thumbnail = 'data:image/jpeg;base64,' + imageData;
+                const mimeType = this.getMimeType(imageName);
+                thumbnail = `data:${mimeType};base64,${imageData}`;
             } catch (e) {
                 console.log('Could not create thumbnail:', e);
             }
@@ -313,9 +314,10 @@ class MetadataFixer {
             let metadata = null;
             let thumbnail = null;
 
-            // Create thumbnail for preview
+            // Create thumbnail for preview with correct MIME type
             try {
-                thumbnail = 'data:image/jpeg;base64,' + imageData;
+                const mimeType = this.getMimeType(imageName);
+                thumbnail = `data:${mimeType};base64,${imageData}`;
             } catch (e) {
                 console.log('Could not create thumbnail:', e);
             }
@@ -638,6 +640,19 @@ class MetadataFixer {
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
         const lowerName = filename.toLowerCase();
         return imageExtensions.some(ext => lowerName.endsWith(ext));
+    }
+
+    getMimeType(filename) {
+        const ext = filename.toLowerCase().split('.').pop();
+        const mimeTypes = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'bmp': 'image/bmp',
+            'webp': 'image/webp'
+        };
+        return mimeTypes[ext] || 'image/jpeg';
     }
 
     updateStatus(message) {
