@@ -42,10 +42,11 @@
                 <h2>Process Your Photos</h2>
                 <div class="upload-area" id="uploadArea">
                     <div class="upload-icon">📁</div>
-                    <h3>Drag & Drop Your Google Takeout ZIP File</h3>
-                    <p>Or click to browse</p>
-                    <input type="file" id="fileInput" accept=".zip" multiple style="display: none;">
+                    <h3>Drag & Drop Your Files</h3>
+                    <p>Upload a Google Takeout ZIP file, or individual images with their JSON metadata files</p>
+                    <input type="file" id="fileInput" accept=".zip,.jpg,.jpeg,.png,.gif,.bmp,.webp,.json" multiple style="display: none;">
                     <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Select Files</button>
+                    <p class="upload-hint">Supported: ZIP files, JPG, JPEG, PNG, GIF, BMP, WebP images, and JSON metadata</p>
                 </div>
 
                 <div id="processingStatus" class="processing-status" style="display: none;">

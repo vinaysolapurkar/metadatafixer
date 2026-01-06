@@ -50,12 +50,34 @@ class MetadataFixer {
         document.getElementById('processingStatus').style.display = 'block';
 
         try {
+            // Separate files by type
+            const zipFiles = [];
+            const imageFiles = [];
+            const jsonFiles = [];
+
             for (const file of files) {
-                if (file.name.endsWith('.zip')) {
-                    await this.processZipFile(file);
-                } else {
-                    console.warn('Skipping non-ZIP file:', file.name);
+                const lowerName = file.name.toLowerCase();
+                if (lowerName.endsWith('.zip')) {
+                    zipFiles.push(file);
+                } else if (this.isImageFile(file.name)) {
+                    imageFiles.push(file);
+                } else if (lowerName.endsWith('.json')) {
+                    jsonFiles.push(file);
                 }
+            }
+
+            console.log('ZIP files:', zipFiles.length);
+            console.log('Image files:', imageFiles.length);
+            console.log('JSON files:', jsonFiles.length);
+
+            // Process ZIP files if any
+            for (const zipFile of zipFiles) {
+                await this.processZipFile(zipFile);
+            }
+
+            // Process individual files if no ZIP but images exist
+            if (zipFiles.length === 0 && imageFiles.length > 0) {
+                await this.processIndividualFiles(imageFiles, jsonFiles);
             }
 
             this.showResults();
@@ -63,6 +85,173 @@ class MetadataFixer {
             console.error('Error processing files:', error);
             this.updateStatus('Error: ' + error.message);
         }
+    }
+
+    async processIndividualFiles(imageFiles, jsonFiles) {
+        this.updateStatus('Processing individual files...');
+        this.updateProgress(10);
+
+        console.log('Processing individual files');
+        console.log('Images:', imageFiles.map(f => f.name));
+        console.log('JSONs:', jsonFiles.map(f => f.name));
+
+        this.stats.total = imageFiles.length;
+        this.updateProgress(20);
+
+        // Create a map of JSON files for quick lookup
+        const jsonMap = new Map();
+        for (const jsonFile of jsonFiles) {
+            try {
+                const content = await this.readFileAsText(jsonFile);
+                jsonMap.set(jsonFile.name, JSON.parse(content));
+                console.log('Loaded JSON:', jsonFile.name);
+            } catch (error) {
+                console.error(`Error parsing JSON file ${jsonFile.name}:`, error);
+            }
+        }
+
+        this.updateStatus(`Processing ${imageFiles.length} images...`);
+        this.updateProgress(30);
+
+        // Process each image file
+        for (let i = 0; i < imageFiles.length; i++) {
+            const imageFile = imageFiles[i];
+            const progress = 30 + (i / imageFiles.length) * 60;
+            this.updateProgress(progress);
+
+            await this.processIndividualImage(imageFile, jsonMap);
+        }
+
+        this.updateProgress(100);
+    }
+
+    async processIndividualImage(imageFile, jsonMap) {
+        try {
+            const imageName = imageFile.name;
+            const jsonName = this.findJsonForIndividualImage(imageName, jsonMap);
+
+            console.log(`Processing individual image: ${imageName}`);
+
+            const imageData = await this.readFileAsBase64(imageFile);
+            let metadata = null;
+            let thumbnail = null;
+
+            // Create thumbnail for preview
+            try {
+                thumbnail = 'data:image/jpeg;base64,' + imageData;
+            } catch (e) {
+                console.log('Could not create thumbnail:', e);
+            }
+
+            if (jsonName) {
+                metadata = jsonMap.get(jsonName);
+                console.log(`Found metadata for ${imageName}:`, metadata);
+            } else {
+                console.warn(`No metadata JSON found for ${imageName}`);
+                console.log('Available JSON files:', Array.from(jsonMap.keys()));
+            }
+
+            // Process the image with metadata
+            const processedImage = await this.embedMetadata(imageData, metadata, imageName);
+
+            this.processedFiles.push({
+                name: imageName,
+                data: processedImage,
+                hadMetadata: !!metadata,
+                metadata: metadata
+            });
+
+            this.stats.processed++;
+            if (metadata) {
+                this.stats.withMetadata++;
+            }
+
+            this.addFileToList(imageName, !!metadata, false, metadata, thumbnail);
+
+        } catch (error) {
+            console.error(`Error processing ${imageFile.name}:`, error);
+            this.stats.failed++;
+            this.addFileToList(imageFile.name, false, true);
+        }
+    }
+
+    findJsonForIndividualImage(imageName, jsonMap) {
+        console.log(`Looking for JSON match for individual image: ${imageName}`);
+
+        // Strategy 1: Direct match - image.jpg -> image.jpg.json
+        const directMatch = imageName + '.json';
+        if (jsonMap.has(directMatch)) {
+            console.log(`Direct match found: ${directMatch}`);
+            return directMatch;
+        }
+
+        // Strategy 2: Without extension - image.jpg -> image.json
+        const nameWithoutExt = imageName.replace(/\.[^/.]+$/, '');
+        const altMatch = nameWithoutExt + '.json';
+        if (jsonMap.has(altMatch)) {
+            console.log(`Alt match found: ${altMatch}`);
+            return altMatch;
+        }
+
+        // Strategy 3: Duplicates - image(1).jpg -> image.jpg(1).json
+        const dupMatch = imageName.replace(/\((\d+)\)\.([^.]+)$/, '.$2($1).json');
+        if (jsonMap.has(dupMatch)) {
+            console.log(`Duplicate match found: ${dupMatch}`);
+            return dupMatch;
+        }
+
+        // Strategy 4: Edited files - IMG_1234-edited.jpg -> IMG_1234.jpg.json
+        const editedMatch = imageName.replace(/-edited\.([^.]+)$/, '.$1.json');
+        if (jsonMap.has(editedMatch)) {
+            console.log(`Edited match found: ${editedMatch}`);
+            return editedMatch;
+        }
+
+        // Strategy 5: Case-insensitive match
+        const lowerImageName = imageName.toLowerCase();
+        for (const key of jsonMap.keys()) {
+            const expectedDirect = (lowerImageName + '.json').toLowerCase();
+            const expectedAlt = (nameWithoutExt + '.json').toLowerCase();
+            const lowerKey = key.toLowerCase();
+            if (lowerKey === expectedDirect || lowerKey === expectedAlt) {
+                console.log(`Case-insensitive match found: ${key}`);
+                return key;
+            }
+        }
+
+        // Strategy 6: Partial match (last resort)
+        for (const key of jsonMap.keys()) {
+            const keyWithoutJson = key.replace(/\.json$/, '');
+            if (imageName.includes(keyWithoutJson) || keyWithoutJson.includes(nameWithoutExt)) {
+                console.log(`Partial match found: ${key}`);
+                return key;
+            }
+        }
+
+        console.log(`No JSON match found for: ${imageName}`);
+        return null;
+    }
+
+    readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsText(file);
+        });
+    }
+
+    readFileAsBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                // Remove data URL prefix and return base64 only
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        });
     }
 
     async processZipFile(zipFile) {

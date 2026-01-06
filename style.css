@@ -167,6 +167,13 @@ nav .container {
     margin-bottom: 1.5rem;
 }
 
+.upload-area .upload-hint {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 1rem;
+    margin-bottom: 0;
+}
+
 /* Processing Status */
 .processing-status {
     text-align: center;
