@@ -55,14 +55,16 @@
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
                     <p id="statusText">Extracting files...</p>
-                    <div id="filesList" class="files-list"></div>
                 </div>
 
                 <div id="resultsSection" class="results-section" style="display: none;">
                     <h3>Processing Complete!</h3>
                     <div class="results-stats" id="resultsStats"></div>
-                    <button class="btn btn-primary" id="downloadBtn">Download Fixed Photos</button>
-                    <button class="btn btn-secondary" onclick="location.reload()">Process Another File</button>
+                    <div id="filesList" class="files-list"></div>
+                    <div class="results-actions">
+                        <button class="btn btn-primary" id="downloadBtn">Download All Fixed Photos</button>
+                        <button class="btn btn-secondary" onclick="location.reload()">Process Another File</button>
+                    </div>
                 </div>
             </div>
         </section>
